@@ -6,10 +6,9 @@ Simplifies building of WebAssembly modules from C and C++
 - Zero dependencies -- portable single-file program
 - Includes `rollup` and `uglify` functionality, producing very small products
 
-
 ## Usage
 
-```
+```plain
 usage: wasmc [options] [<dir>]
 usage: wasmc [-C <dir>] -T<tool> [<tool-arg> ...]
 options:
@@ -24,9 +23,7 @@ options:
 
 <dir>
   The module directory. Defaults to "." (dirname(<file>) with -config)
-
 ```
-
 
 ### Example
 
@@ -44,9 +41,9 @@ export void hello() {
 Input `foo.js`:
 
 ```js
-export const ready = Module.ready
+export const ready = Module.ready;
 export function hello() {
-  _hello() // Call WASM function "hello"
+  _hello(); // Call WASM function "hello"
 }
 ```
 
@@ -54,41 +51,40 @@ Config file `wasmc.js`
 
 ```js
 module({
-  name:    "foo",
-  out:     "dist/foo.js",
+  name: "foo",
+  out: "dist/foo.js",
   jsentry: "foo.js",
   sources: "*.c",
-})
+});
 ```
 
 Build:
 
-```
-$ wasmc
+```sh
+\$ wasmc
 ```
 
 Generated `dist/foo.js`:
 
 ```js
-(function(exports){
+(function (exports) {
   "use strict";
   // -- emscripten bootstrap code here --
-  Object.defineProperty(exports,"__esModule",{value:!0});
+  Object.defineProperty(exports, "__esModule", { value: !0 });
   exports.ready = Module.ready;
-  exports.hello = function() {
+  exports.hello = function () {
     _hello();
   };
-})(typeof exports!='undefined'?exports:this["foo"]={})
+})(typeof exports != "undefined" ? exports : (this["foo"] = {}));
 //# sourceMappingURL=foo.js.map
 ```
 
 Run:
 
-```
+```sh
 $ node -e 'require("./out/foo.js").ready.then(m => m.hello())'
 Hello from wasm
 ```
-
 
 ### Configuration file
 
@@ -100,10 +96,9 @@ compiled with certain flags) in this file.
 - See [`examples/example/wasmc.js`](examples/example/wasmc.js) for an example.
 - See [`misc/config-file.d.ts`](misc/config-file.d.ts) for a complete API description of the configuration file.
 
-
 ## Building from source
 
-```
+```sh
 npm install
 ./misc/build.sh
 ```
@@ -112,4 +107,3 @@ npm install
 - Debug product: `wasmc.g`
 - Build only the debug product: `./misc/build.sh -g`
 - Build debug product while watching source files: `./misc/build.sh -w`
-

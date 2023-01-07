@@ -1,10 +1,8 @@
 {
-  "name": "wasmc",
-  "version": "2.2.1",
+  "name": "@ligue/wasmc",
+  "version": "2.2.2",
   "description": "Simplifies building of WebAssembly modules from C and C++",
-  "bin": {
-    "wasmc": "wasmc"
-  },
+  "bin": "wasmc",
   "files": [
     "wasmc",
     "wasmc.map",
@@ -14,10 +12,10 @@
   ],
   "author": "rsms",
   "license": "MIT",
-  "homepage": "https://github.com/rsms/js-wasmc",
+  "homepage": "https://github.com/logue/js-wasmc",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rsms/js-wasmc.git"
+    "url": "git+https://github.com/logue/js-wasmc.git"
   },
   "scripts": {
     "build": "./misc/build.sh",
@@ -25,9 +23,10 @@
     "build-w": "./misc/build.sh -g -w"
   },
   "devDependencies": {
-    "google-closure-compiler": "^20191111.0.0",
-    "rollup": "^0.63.4",
-    "source-map-support": "^0.5.16",
+    "google-closure-compiler": "^20221102.0.1",
+    "rollup": "^3.9.1",
+    "source-map-support": "^0.5.21",
     "uglify-es": "^3.3.9"
-  }
+  },
+  "packageManager": "yarn@3.3.1"
 }
