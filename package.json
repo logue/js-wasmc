@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "google-closure-compiler": "^20221102.0.1",
-    "rollup": "^3.9.1",
+    "rollup": "^0.68.2",
     "source-map-support": "^0.5.21",
     "uglify-es": "^3.3.9"
   },
