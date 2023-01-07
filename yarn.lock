@@ -5,9 +5,9 @@ __metadata:
   version: 6
   cacheKey: 8
 
-"@ligue/wasmc@workspace:.":
+"@logue/wasmc@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@ligue/wasmc@workspace:."
+  resolution: "@logue/wasmc@workspace:."
   dependencies:
     google-closure-compiler: ^20221102.0.1
     rollup: ^0.68.2

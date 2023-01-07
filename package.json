@@ -1,5 +1,6 @@
 {
-  "name": "@ligue/wasmc",
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@logue/wasmc",
   "version": "2.2.2",
   "description": "Simplifies building of WebAssembly modules from C and C++",
   "bin": "wasmc",
@@ -10,7 +11,17 @@
     "README.md",
     "LICENSE"
   ],
-  "author": "rsms",
+  "author": {
+    "name": "rsms",
+    "url": "https://rsms.me/"
+  },
+  "contributors": [
+    {
+      "name": "Logue",
+      "email": "logue@hotmail.co.jp",
+      "url": "https://logue.dev"
+    }
+  ],
   "license": "MIT",
   "homepage": "https://github.com/logue/js-wasmc",
   "repository": {
