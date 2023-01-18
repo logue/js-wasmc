@@ -1,27 +1,31 @@
-import { dlog, assert } from "./util"
-import { parseopts } from "./parseopts"
-import { Context } from "./context"
-import * as cmd_package from "./cmd_package"
-import { cmd_build } from "./cmd_build"
+import { parseopts } from './parseopts';
+import { Context } from './context';
+import * as cmd_package from './cmd_package';
+import { cmd_build } from './cmd_build';
 
-try{require('source-map-support').install()}catch(_){}
-
-const fs = require('fs')
-const Path = require('path')
+try {
+  require('source-map-support').install();
+} catch (_) {
+  //
+}
 
 const options = {
   // global options
-  h: false, help: false,
-  C: "",
+  h: false,
+  help: false,
+  C: '',
   T: null,
 
   // build options
-  debug: false, g: false,
-  watch: false, w: false,
-  config: "",
+  debug: false,
+  g: false,
+  watch: false,
+  w: false,
+  config: '',
   clean: false,
-  quiet: false, q: false,
-}
+  quiet: false,
+  q: false,
+};
 
 const USAGE = `
 wasmc ${WASMC_VERSION} WebAssembly builder.
@@ -39,78 +43,80 @@ options:
 
 <dir>
   The module directory. Defaults to "." (dirname(<file>) with -config)
-`
+`;
 
 function usage() {
-  console.error(USAGE.trim() + "\n")
-  process.exit(1)
+  console.error(USAGE.trim() + '\n');
+  process.exit(1);
 }
-
 
 function die(msg) {
-  console.error("wasmc: " + msg)
-  console.error(`See wasmc -h for help.`)
-  process.exit(1)
+  console.error('wasmc: ' + msg);
+  console.error(`See wasmc -h for help.`);
+  process.exit(1);
 }
-
 
 const tools = {
-  "package": {
-    descr: "Package emcc output into js",
+  package: {
+    descr: 'Package emcc output into js',
     main: cmd_package.main,
   },
-}
-
+};
 
 async function main() {
-  let opts = {...options}
-  let args = parseopts(process.argv.splice(2), opts, usage, { stopOnNonFlag: true })
+  let opts = { ...options };
+  let args = parseopts(process.argv.splice(2), opts, usage, {
+    stopOnNonFlag: true,
+  });
 
   if (opts.h || opts.help) {
-    usage()
+    usage();
   }
 
-  let c = new Context()
+  let c = new Context();
 
   // chdir
   if (opts.C) {
-    process.chdir(opts.C)
+    process.chdir(opts.C);
   }
 
   // tool?
   if (opts.T !== null) {
-    if (opts.T == "") {
-      console.log("available tools:")
-      let names = Object.keys(tools)
-      let longestName = names.reduce((len, s) => Math.max(len, s.length), 0)
-      let spaces = "             "
+    if (opts.T == '') {
+      console.log('available tools:');
+      let names = Object.keys(tools);
+      let longestName = names.reduce((len, s) => Math.max(len, s.length), 0);
+      let spaces = '             ';
       for (let name of names) {
-        let tool = tools[name]
+        let tool = tools[name];
         console.log(
-          "  wasmc -T" +
-          name + spaces.substr(0, longestName - name.length) +
-          "  " + tool.descr
-        )
+          '  wasmc -T' +
+            name +
+            spaces.substr(0, longestName - name.length) +
+            '  ' +
+            tool.descr
+        );
       }
-      console.log("See `wasmc -T<tool> -h` for information about a tool.")
-      process.exit(0)
+      console.log('See `wasmc -T<tool> -h` for information about a tool.');
+      process.exit(0);
     } else {
-      let tool = tools[opts.T]
+      let tool = tools[opts.T];
       if (!tool) {
-        die(`no such tool "${opts.T}".\nSee wasmc -T for list of tools.`)
+        die(`no such tool "${opts.T}".\nSee wasmc -T for list of tools.`);
       }
-      return tool.main(c, args)
+      return tool.main(c, args);
     }
   }
 
-  return cmd_build(c, opts, args)
+  return cmd_build(c, opts, args);
 }
 
-
-main().then(() => {
-  // must explicitly to cause ninjabot process to end
-  process.exit(0)
-}).catch(err => {
-  console.error(err.stack||String(err))
-  process.exit(1)
-})
+main()
+  .then(() => {
+    // must explicitly to cause ninjabot process to end
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error(err.stack || String(err));
+    process.exit(1);
+  });

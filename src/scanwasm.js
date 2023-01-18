@@ -1,28 +1,25 @@
-import { assert, dlog } from "./util"
+import { assert, dlog } from './util';
 
-const crypto = require('crypto')
-
+const crypto = require('crypto');
 
 // Wasm 1.0 section IDs
-const
-  SECTION_TYPE     = 1,  // Function signature declarations
-  SECTION_IMPORT   = 2,  // Import declarations
-  SECTION_FUNCTION = 3,  // Function declarations
-  SECTION_TABLE    = 4,  // Indirect function table and other tables
-  SECTION_MEMORY   = 5,  // Memory attributes
-  SECTION_GLOBAL   = 6,  // Global declarations
-  SECTION_EXPORT   = 7,  // Exports
-  SECTION_START    = 8,  // Start function declaration
-  SECTION_ELEMENT  = 9,  // Elements section
-  SECTION_CODE     = 10, //  Function bodies (code)
-  SECTION_DATA     = 11; //  Data segments
+const SECTION_TYPE = 1, // Function signature declarations
+  SECTION_IMPORT = 2, // Import declarations
+  SECTION_FUNCTION = 3, // Function declarations
+  SECTION_TABLE = 4, // Indirect function table and other tables
+  SECTION_MEMORY = 5, // Memory attributes
+  SECTION_GLOBAL = 6, // Global declarations
+  SECTION_EXPORT = 7, // Exports
+  SECTION_START = 8, // Start function declaration
+  SECTION_ELEMENT = 9, // Elements section
+  SECTION_CODE = 10, //  Function bodies (code)
+  SECTION_DATA = 11; //  Data segments
 
 // External kinds
-const
-  EXT_KIND_FUNCTION = 0, // indicating a Function import or definition
-  EXT_KIND_TABLE    = 1, // indicating a Table import or definition
-  EXT_KIND_MEMORY   = 2, // indicating a Memory import or definition
-  EXT_KIND_GLOBAL   = 3; // indicating a Global import or definition
+const EXT_KIND_FUNCTION = 0, // indicating a Function import or definition
+  EXT_KIND_TABLE = 1, // indicating a Table import or definition
+  EXT_KIND_MEMORY = 2, // indicating a Memory import or definition
+  EXT_KIND_GLOBAL = 3; // indicating a Global import or definition
 
 // value types
 // -0x01 (i.e., the byte 0x7f) = i32
@@ -32,8 +29,7 @@ const
 // -0x10 (i.e., the byte 0x70) = anyfunc
 // -0x20 (i.e., the byte 0x60) = func
 // -0x40 (i.e., the byte 0x40) = pseudo type for representing an empty block_type
-const
-  T_I32 = 0x7f,
+const T_I32 = 0x7f,
   T_I64 = 0x7e,
   T_F32 = 0x7d,
   T_F64 = 0x7c,
@@ -41,49 +37,46 @@ const
   T_FUNC = 0x60,
   T_EMPTY_BLOCK = 0x40;
 
-
-
 export function hashWasmAPI(buf) {
   // extract interesting section slices
   const [typeSecBuf, importSecBuf, exportSecBuf] = scanSections(buf, [
     SECTION_TYPE,
     SECTION_IMPORT,
     SECTION_EXPORT,
-  ])
+  ]);
 
   if (!typeSecBuf || !importSecBuf || !exportSecBuf) {
-    return ""
+    return '';
   }
 
-  const hash = crypto.createHash('sha256')
-  hash.update(importSecBuf)
-  hash.update(exportSecBuf)
+  const hash = crypto.createHash('sha256');
+  hash.update(importSecBuf);
+  hash.update(exportSecBuf);
 
-  let funIndexes = []  // funIndex => true
-  let globalIndexes = []  // globalIndex => true
+  let funIndexes = []; // funIndex => true
+  let globalIndexes = []; // globalIndex => true
 
   // filter types in type section that are used externally
-  scanImportsFunTypes(importSecBuf, funIndexes)
-  scanExportsFunTypes(exportSecBuf, funIndexes, globalIndexes)
+  scanImportsFunTypes(importSecBuf, funIndexes);
+  scanExportsFunTypes(exportSecBuf, funIndexes, globalIndexes);
 
   // hash function types which are used by imports
-  let sc = new WasmScanner(typeSecBuf)
-  let count = sc.readVarUInt32()
+  let sc = new WasmScanner(typeSecBuf);
+  let count = sc.readVarUInt32();
   for (let funIndex = 0; funIndex < count; funIndex++) {
-    let start = sc.i
-    sc.skipFuncType()
+    let start = sc.i;
+    sc.skipFuncType();
     if (funIndexes[funIndex]) {
-      hash.update(typeSecBuf.subarray(start, sc.i))
+      hash.update(typeSecBuf.subarray(start, sc.i));
     }
   }
 
-  return hash.digest()
+  return hash.digest();
 }
 
-
 function scanExportsFunTypes(buf, funIndexes, globalIndexes) {
-  let sc = new WasmScanner(buf)
-  let count = sc.readVarUInt32()
+  let sc = new WasmScanner(buf);
+  let count = sc.readVarUInt32();
 
   // dlog({ locationInFile: buf.byteOffset }, JSON.stringify(buf.toString("ascii")))
   //   \x17                              | count 23
@@ -113,115 +106,109 @@ function scanExportsFunTypes(buf, funIndexes, globalIndexes) {
 
   for (let i = 0; i < count; ++i) {
     // dlog(sc.readUTF8Str())
-    sc.skipSizePrefixedData()
-    let external_kind = sc.buf[sc.i++]
-    let index = sc.readVarUInt32()
+    sc.skipSizePrefixedData();
+    let external_kind = sc.buf[sc.i++];
+    let index = sc.readVarUInt32();
     switch (external_kind) {
       case EXT_KIND_FUNCTION:
-        funIndexes[index] = 1
-        break
+        funIndexes[index] = 1;
+        break;
       case EXT_KIND_TABLE:
-        dlog("TODO EXT_KIND_TABLE")
-        break
+        dlog('TODO EXT_KIND_TABLE');
+        break;
       case EXT_KIND_MEMORY:
-        dlog("TODO EXT_KIND_MEMORY")
-        break
+        dlog('TODO EXT_KIND_MEMORY');
+        break;
       case EXT_KIND_GLOBAL:
-        globalIndexes[index] = 1
-        break
+        globalIndexes[index] = 1;
+        break;
     }
   }
 }
 
-
 function scanImportsFunTypes(buf, funIndexes) {
-  let sc = new WasmScanner(buf)
-  let count = sc.readVarUInt32()
+  let sc = new WasmScanner(buf);
+  let count = sc.readVarUInt32();
   for (let i = 0; i < count; ++i) {
     // let modname  = sc.readUTF8Str()
     // let funcname = sc.readUTF8Str() ; dlog(`${modname} / ${funcname}`)
-    sc.skipSizePrefixedData()
-    sc.skipSizePrefixedData()
+    sc.skipSizePrefixedData();
+    sc.skipSizePrefixedData();
     switch (sc.buf[sc.i++] /* external_kind */) {
       case EXT_KIND_FUNCTION:
-        funIndexes[sc.readVarUInt32()] = 1
-        break
+        funIndexes[sc.readVarUInt32()] = 1;
+        break;
       case EXT_KIND_TABLE:
-        sc.scanTableType()
-        break
+        sc.scanTableType();
+        break;
       case EXT_KIND_MEMORY:
-        sc.scanResizableLimits()
-        break
+        sc.scanResizableLimits();
+        break;
       case EXT_KIND_GLOBAL:
-        sc.scanGlobalType()
-        break
+        sc.scanGlobalType();
+        break;
     }
   }
 }
-
 
 // sections should be an object with SECTION_* as keys for sections to scan.
 // The `sections` object's properties are updated with
 export function scanSections(buf, sectionIds) {
-  let sectionsFound = 9
-  let sectionBufs = new Array(sectionIds.length)
-  let sc = new WasmScanner(buf)
+  let sectionsFound = 9;
+  let sectionBufs = new Array(sectionIds.length);
+  let sc = new WasmScanner(buf);
   if (!sc.scanHeader()) {
     // buf is not a valid wasm module
-    return ""
+    return '';
   }
   while (sc.i < buf.length) {
-    let sid = sc.readVarInt7()
-    let slen = sc.readVarUInt32()
-    let sectionIdsIndex = sectionIds.indexOf(sid)
+    let sid = sc.readVarInt7();
+    let slen = sc.readVarUInt32();
+    let sectionIdsIndex = sectionIds.indexOf(sid);
     if (sectionIdsIndex != -1) {
-      sectionBufs[sectionIdsIndex] = buf.subarray(sc.i, sc.i + slen)
+      sectionBufs[sectionIdsIndex] = buf.subarray(sc.i, sc.i + slen);
       if (sectionsFound == sectionIds.length) {
-        break
+        break;
       }
     }
-    sc.i += slen  // skip past body of section
+    sc.i += slen; // skip past body of section
   }
-  return sectionBufs
+  return sectionBufs;
 }
-
 
 export class WasmScanner {
   constructor(buf) {
-    this.buf = buf
-    this.i = 0
+    this.buf = buf;
+    this.i = 0;
   }
-
 
   // scans the magic bytes and the version. Returns true if
   scanHeader() {
-    this.i = 8
+    this.i = 8;
     // magic is \0asm
-    return this.buf.readUInt32LE(0) == 0x6d736100 && this.buf.readUInt32LE(4) == 1
+    return (
+      this.buf.readUInt32LE(0) == 0x6d736100 && this.buf.readUInt32LE(4) == 1
+    );
   }
-
 
   scanResizableLimits() {
-    let flags   = this.readVarInt1()
-    let initial = this.readVarUInt32()
-    let maximum = flags ? this.readVarUInt32() : -1
-    return { flags, initial, maximum }
+    let flags = this.readVarInt1();
+    let initial = this.readVarUInt32();
+    let maximum = flags ? this.readVarUInt32() : -1;
+    return { flags, initial, maximum };
   }
-
 
   scanTableType() {
-    let elemType = this.readVarInt7()
-    let limits = this.scanResizableLimits()
-    return { elemType, limits }
+    let elemType = this.readVarInt7();
+    let limits = this.scanResizableLimits();
+    return { elemType, limits };
   }
-
 
   scanGlobalType() {
-    let contentType = this.readValueType()
-    let mutability = this.readVarInt1()
-    return { contentType, mutability }
+    let contentType = this.readValueType();
+    let mutability = this.readVarInt1();
+    return { contentType, mutability };
   }
-
 
   scanFuncType() {
     // form         varint7      the value for the func type constructor
@@ -229,83 +216,77 @@ export class WasmScanner {
     // param_types  value_type*  the parameter types of the function
     // return_count varuint1     the number of results from the function
     // return_type  value_type?  the result type of the function (if return_count is 1)
-    let form = this.readVarInt7()
-    let nparams = this.readVarUInt32()
-    let params = []
+    let form = this.readVarInt7();
+    let nparams = this.readVarUInt32();
+    let params = [];
     for (let i = 0; i < nparams; i++) {
-      params.push(this.readValueType())
+      params.push(this.readValueType());
     }
-    let hasReturns = this.readVarInt1()
-    let returns = hasReturns ? this.readValueType() : null
-    return {form, params, returns}
+    let hasReturns = this.readVarInt1();
+    let returns = hasReturns ? this.readValueType() : null;
+    return { form, params, returns };
   }
-
 
   skipFuncType() {
-    this.i++ // form
-    let nparams = this.readVarUInt32()
-    this.i += nparams  // valueType is 1 byte
+    this.i++; // form
+    let nparams = this.readVarUInt32();
+    this.i += nparams; // valueType is 1 byte
     if (this.readVarInt1()) {
-      this.i += 1 // valueType is 1 byte
+      this.i += 1; // valueType is 1 byte
     }
   }
-
 
   skipSizePrefixedData() {
-    let len = this.readVarUInt32()
-    this.i += len
+    let len = this.readVarUInt32();
+    this.i += len;
   }
 
-
-  readValueType() {  // returns a T_* constant
-    return this.buf[this.i++]
+  readValueType() {
+    // returns a T_* constant
+    return this.buf[this.i++];
   }
-
 
   readUTF8Str() {
-    let len = this.readVarUInt32()
-    let i = this.i
-    this.i += len
-    let s = this.buf.toString("utf8", i, this.i)
-    return s
+    let len = this.readVarUInt32();
+    let i = this.i;
+    this.i += len;
+    let s = this.buf.toString('utf8', i, this.i);
+    return s;
   }
-
 
   readVarInt7() {
-    let byte = this.buf[this.i++]
-    return byte < 64 ? byte : -(128 - byte)
+    let byte = this.buf[this.i++];
+    return byte < 64 ? byte : -(128 - byte);
   }
-
 
   readVarInt1() {
-    return this.buf[this.i++]
+    return this.buf[this.i++];
   }
 
-
   readVarUInt32() {
-    let i = this.i
-    let end = Math.min(i + 5, this.buf.length)
-    let result = 0 // :uint32
-    let shift = 0  // :int32
-    let b = 0      // :byte
+    let i = this.i;
+    let end = Math.min(i + 5, this.buf.length);
+    let result = 0; // :uint32
+    let shift = 0; // :int32
+    let b = 0; // :byte
     while (i < end) {
-      b = this.buf[i++]
-      result = result | ((b & 0x7F) << shift)
+      b = this.buf[i++];
+      result = result | ((b & 0x7f) << shift);
       if ((b & 0x80) == 0) {
-        break
+        break;
       }
-      shift += 7
+      shift += 7;
     }
 
-    let length = i - this.i
-    this.i = i
+    let length = i - this.i;
+    this.i = i;
 
-    if (i == end && (b & 0x80)) {
-      throw new Error("varint too large")
+    if (i == end && b & 0x80) {
+      throw new Error('varint too large');
     } else if (length == 0) {
-      throw new Error("varint of length 0")
+      throw new Error('varint of length 0');
     }
 
-    return result
+    return result;
   }
 }

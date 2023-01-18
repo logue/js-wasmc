@@ -2,7 +2,7 @@
 // We can use ES module import and export here if we want.
 
 // promise that resolves when the module has loaded and is ready.
-export const ready = Module.ready
+export const ready = Module.ready;
 
 // An example function
 export function hello() {
@@ -14,9 +14,9 @@ export function hello() {
   // Since wasmc performs dead-code elimination, only the second print call in this
   // example is actually included in the generated javascript.
   if (DEBUG) {
-    print("DEBUG is true")
+    print('DEBUG is true');
   } else {
-    print("DEBUG is false")
+    print('DEBUG is false');
   }
 
   // Compile-time constants are built-in to the generate javascript and defined with
@@ -24,17 +24,17 @@ export function hello() {
   //   -DHELLO_WORLD="[1, 2+5, '3']"
   // Which means all references to the name "HELLO_WORLD" is replaced with the javascript
   // expression "[1, 7, '3']". Notice how the 2+5 was evaluated at compile time.
-  print("HELLO_WORLD =", HELLO_WORLD)
+  print('HELLO_WORLD =', HELLO_WORLD);
 
   // assert(condition, message?) is available. Its use is stripped from non-debug builds.
   try {
-    assert(false, "testing assert()")
+    assert(false, 'testing assert()');
   } catch (err) {
-    print(err.message)
+    print(err.message);
   }
 
   // Call out hello function which outputs messages on stdout and stderr
-  _hello()
+  _hello();
 
   // addFunctionWasm is helper which allows exposing JavaScript functions at runtime
   // to the WASM module.
@@ -59,12 +59,12 @@ export function hello() {
   //  "f" f32
   //  "d" f64
   //
-  if (typeof addFunctionWasm == "function") {
+  if (typeof addFunctionWasm == 'function') {
     let f = addFunctionWasm((int1, int2) => {
-      print("js function called from WASM with args", int1, int2)
-      return int1 * int2
-    }, "iii")
+      print('js function called from WASM with args', int1, int2);
+      return int1 * int2;
+    }, 'iii');
     // ... and calling it from the WASM module
-    _callJsFunction(f)
+    _callJsFunction(f);
   }
 }

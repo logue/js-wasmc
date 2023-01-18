@@ -1,8 +1,7 @@
-import { assert, dlog, stat } from "./util"
+import { assert, dlog, stat } from './util';
 
-const fs = require("fs")
-const Path = require("path")
-
+const fs = require('fs');
+const Path = require('path');
 
 // watchfile(filename :string, onchange :ChangeCallback) :FSWatcher
 // type ChangeCallback = (event:"end")=>void
@@ -16,68 +15,68 @@ const Path = require("path")
 // unless you call restart()
 //
 export function watchfile(filename, onchange) {
-  filename = Path.resolve(filename)
+  filename = Path.resolve(filename);
 
-  let lastMtime = fs.statSync(filename).mtimeMs
-  let goneTimer = null
-  let fswatcher = null
+  let lastMtime = fs.statSync(filename).mtimeMs;
+  let goneTimer = null;
+  let fswatcher = null;
 
   async function onFSEvent(event, filename2) {
-    let st = await stat(filename)
+    let st = await stat(filename);
 
     // dlog("onFSEvent", {event, filename, filename2, st})
 
-    if (event == "change") {
+    if (event == 'change') {
       if (st.mtimeMs > lastMtime) {
-        lastMtime = st.mtimeMs
-        onchange(event, st)
+        lastMtime = st.mtimeMs;
+        onchange(event, st);
       }
-      return
+      return;
     }
 
     let restart = st => {
-      assert(st)
+      assert(st);
       if (st.mtimeMs > lastMtime) {
-        lastMtime = st.mtimeMs
-        onchange(event, st)
+        lastMtime = st.mtimeMs;
+        onchange(event, st);
       }
-      watcher.restart()
-    }
+      watcher.restart();
+    };
 
     if (!st) {
       goneTimer = setTimeout(async () => {
-        let st = await stat(filename)
+        let st = await stat(filename);
         if (st) {
-          restart(st)
+          restart(st);
         } else {
           // considering file gone
-          fswatcher.close()
-          onchange("end")
+          fswatcher.close();
+          onchange('end');
         }
-      }, 200)
+      }, 200);
     } else {
-      clearTimeout(goneTimer)
-      restart(st)
+      clearTimeout(goneTimer);
+      restart(st);
     }
   }
 
   var watcher = {
     restart() {
       if (fswatcher) {
-        fswatcher.close()
+        fswatcher.close();
       }
-      fswatcher = fs.watch(filename, onFSEvent)
+      fswatcher = fs.watch(filename, onFSEvent);
     },
 
     close() {
       if (fswatcher) {
-        fswatcher.close()
-        fswatcher = null
+        fswatcher.close();
+        fswatcher = null;
       }
     },
-  }
+  };
 
-  watcher.restart()
+  watcher.restart();
 
-  return watcher
+  return watcher;
 }

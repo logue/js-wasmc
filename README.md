@@ -51,10 +51,10 @@ Config file `wasmc.js`
 
 ```js
 module({
-  name: "foo",
-  out: "dist/foo.js",
-  jsentry: "foo.js",
-  sources: "*.c",
+  name: 'foo',
+  out: 'dist/foo.js',
+  jsentry: 'foo.js',
+  sources: '*.c',
 });
 ```
 
@@ -68,14 +68,14 @@ Generated `dist/foo.js`:
 
 ```js
 (function (exports) {
-  "use strict";
+  'use strict';
   // -- emscripten bootstrap code here --
-  Object.defineProperty(exports, "__esModule", { value: !0 });
+  Object.defineProperty(exports, '__esModule', { value: !0 });
   exports.ready = Module.ready;
   exports.hello = function () {
     _hello();
   };
-})(typeof exports != "undefined" ? exports : (this["foo"] = {}));
+})(typeof exports != 'undefined' ? exports : (this['foo'] = {}));
 //# sourceMappingURL=foo.js.map
 ```
 

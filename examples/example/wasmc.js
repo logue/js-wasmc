@@ -7,23 +7,23 @@
 // })
 
 module({
-  name:    "foo",
-  out:     builddir + "/foo.js",
-  jsentry: "src/foo.js",
-  jslib:   "src/lib.js",
-  sources: "src/*.c",
-  target:  "node",
-  embed:   true,
+  name: 'foo',
+  out: builddir + '/foo.js',
+  jsentry: 'src/foo.js',
+  jslib: 'src/lib.js',
+  sources: 'src/*.c',
+  target: 'node',
+  embed: true,
   // ecma:    5,
   constants: {
-    HELLO_WORLD: [1, 2+5, '3'],
+    HELLO_WORLD: [1, 2 + 5, '3'],
   },
-})
+});
 
 module({
-  name:    "bar",
-  sources: "src/bar.c",
-  cflags: [ "-Wall" ],
+  name: 'bar',
+  sources: 'src/bar.c',
+  cflags: ['-Wall'],
   // embed:   true,
-  sourceMap: builddir + "/bar.map", // custom source map filename
-})
+  sourceMap: builddir + '/bar.map', // custom source map filename
+});

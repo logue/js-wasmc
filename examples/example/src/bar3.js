@@ -1,4 +1,3 @@
-
 /*import { assert, dlog, writefileSync, globv, stripext } from "./util"
 
 const fs = require("fs")
@@ -417,4 +416,3 @@ function loadConfigFile(filename, config) {
   return config
 }
 */
-

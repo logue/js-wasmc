@@ -47,4 +47,4 @@ let exported = {
 }
 updateApi(exported)
 export default exported
-`
+`;

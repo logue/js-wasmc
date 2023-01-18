@@ -1,8 +1,8 @@
-import "./bar3"
-import "./bar4"
-import "./bar5"
-import "./bar6"
-import "fs"
+import './bar3';
+import './bar4';
+import './bar5';
+import './bar6';
+import 'fs';
 
 export function call_bar1() {}
 /*import { assert, dlog, writefileSync, globv, stripext } from "./util"
