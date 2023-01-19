@@ -1,4 +1,4 @@
-// mutates opts
+/** mutates opts */
 export function parseopts(argv, opts, usage, settings) {
   settings = {
     stopOnNonFlag: false, // if true, stop processing on first non-flag argument

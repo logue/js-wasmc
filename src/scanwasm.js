@@ -1,9 +1,8 @@
-import { assert, dlog } from './util';
+import { dlog } from './util';
+import crypto from 'node:crypto';
 
-const crypto = require('crypto');
-
-// Wasm 1.0 section IDs
-const SECTION_TYPE = 1, // Function signature declarations
+/** Wasm 1.0 section IDs */
+export const SECTION_TYPE = 1, // Function signature declarations
   SECTION_IMPORT = 2, // Import declarations
   SECTION_FUNCTION = 3, // Function declarations
   SECTION_TABLE = 4, // Indirect function table and other tables
@@ -15,28 +14,31 @@ const SECTION_TYPE = 1, // Function signature declarations
   SECTION_CODE = 10, //  Function bodies (code)
   SECTION_DATA = 11; //  Data segments
 
-// External kinds
-const EXT_KIND_FUNCTION = 0, // indicating a Function import or definition
+/** External kinds */
+export const EXT_KIND_FUNCTION = 0, // indicating a Function import or definition
   EXT_KIND_TABLE = 1, // indicating a Table import or definition
   EXT_KIND_MEMORY = 2, // indicating a Memory import or definition
   EXT_KIND_GLOBAL = 3; // indicating a Global import or definition
 
-// value types
-// -0x01 (i.e., the byte 0x7f) = i32
-// -0x02 (i.e., the byte 0x7e) = i64
-// -0x03 (i.e., the byte 0x7d) = f32
-// -0x04 (i.e., the byte 0x7c) = f64
-// -0x10 (i.e., the byte 0x70) = anyfunc
-// -0x20 (i.e., the byte 0x60) = func
-// -0x40 (i.e., the byte 0x40) = pseudo type for representing an empty block_type
-const T_I32 = 0x7f,
+/**
+ * value types
+ * -0x01 (i.e., the byte 0x7f) = i32
+ * -0x02 (i.e., the byte 0x7e) = i64
+ * -0x03 (i.e., the byte 0x7d) = f32
+ * -0x04 (i.e., the byte 0x7c) = f64
+ * -0x10 (i.e., the byte 0x70) = anyfunc
+ * -0x20 (i.e., the byte 0x60) = func
+ * -0x40 (i.e., the byte 0x40) = pseudo type for representing an empty block_type
+
+const
+  T_I32 = 0x7f,
   T_I64 = 0x7e,
   T_F32 = 0x7d,
   T_F64 = 0x7c,
   T_ANYFUNC = 0x70,
   T_FUNC = 0x60,
   T_EMPTY_BLOCK = 0x40;
-
+ */
 export function hashWasmAPI(buf) {
   // extract interesting section slices
   const [typeSecBuf, importSecBuf, exportSecBuf] = scanSections(buf, [
@@ -151,8 +153,10 @@ function scanImportsFunTypes(buf, funIndexes) {
   }
 }
 
-// sections should be an object with SECTION_* as keys for sections to scan.
-// The `sections` object's properties are updated with
+/**
+ * sections should be an object with SECTION_* as keys for sections to scan.
+ * The `sections` object's properties are updated with
+ */
 export function scanSections(buf, sectionIds) {
   let sectionsFound = 9;
   let sectionBufs = new Array(sectionIds.length);
@@ -182,7 +186,7 @@ export class WasmScanner {
     this.i = 0;
   }
 
-  // scans the magic bytes and the version. Returns true if
+  /** scans the magic bytes and the version. Returns true if */
   scanHeader() {
     this.i = 8;
     // magic is \0asm
@@ -229,7 +233,7 @@ export class WasmScanner {
 
   skipFuncType() {
     this.i++; // form
-    let nparams = this.readVarUInt32();
+    const nparams = this.readVarUInt32();
     this.i += nparams; // valueType is 1 byte
     if (this.readVarInt1()) {
       this.i += 1; // valueType is 1 byte
@@ -237,7 +241,7 @@ export class WasmScanner {
   }
 
   skipSizePrefixedData() {
-    let len = this.readVarUInt32();
+    const len = this.readVarUInt32();
     this.i += len;
   }
 
@@ -247,15 +251,14 @@ export class WasmScanner {
   }
 
   readUTF8Str() {
-    let len = this.readVarUInt32();
-    let i = this.i;
+    const len = this.readVarUInt32();
+    const i = this.i;
     this.i += len;
-    let s = this.buf.toString('utf8', i, this.i);
-    return s;
+    return this.buf.toString('utf8', i, this.i);
   }
 
   readVarInt7() {
-    let byte = this.buf[this.i++];
+    const byte = this.buf[this.i++];
     return byte < 64 ? byte : -(128 - byte);
   }
 
@@ -265,7 +268,7 @@ export class WasmScanner {
 
   readVarUInt32() {
     let i = this.i;
-    let end = Math.min(i + 5, this.buf.length);
+    const end = Math.min(i + 5, this.buf.length);
     let result = 0; // :uint32
     let shift = 0; // :int32
     let b = 0; // :byte

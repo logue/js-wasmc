@@ -1,29 +1,28 @@
-import { assert, dlog, statSync, tmpdir } from './util';
+import { dlog, statSync } from './util';
 import ninjabotProgramCode from './ninjabot-program';
+import fs from 'node:fs';
+import { join, resolve, relative } from 'node:path';
+import { spawn } from 'node:child_process';
 
-const net = require('net');
-const fs = require('fs');
-const Path = require('path');
-const child_process = require('child_process');
-
-const emsdkDockerImage = 'rsms/emsdk:2.0.25';
+export const defaultEmsdkDockerImage = 'rsms/emsdk:2.0.25';
 const wasmcdir = __dirname;
 
-// NinjaBot spawns a docker instance running rsms/emsdk:latest with misc/ninjabot.js
-// which communicates with this process with JSON over stdio.
-// The "remote" misc/ninjabot.js script manages ninja processes as requests arrive.
-// This way we ware able to perform many calls to ninja without having to wait
-// for docker to start every time.
-// Importantly, this causes a big speed improvement for "watch" mode.
-//
-// To run the docker image interactively for development:
-//
-//   docker run --rm -it -v "$PWD:/src" rsms/emsdk:latest
-//
+/**
+ * NinjaBot spawns a docker instance running rsms/emsdk:latest with misc/ninjabot.js
+ * which communicates with this process with JSON over stdio.
+ * The "remote" misc/ninjabot.js script manages ninja processes as requests arrive.
+ * This way we ware able to perform many calls to ninja without having to wait
+ * for docker to start every time.
+ * Importantly, this causes a big speed improvement for "watch" mode.
+ *
+ * To run the docker image interactively for development:
+ *
+ *   docker run --rm -it -v "$PWD:/src" rsms/emsdk:latest
+ */
 export class NinjaBot {
   constructor(projectdir, builddir) {
-    this.projectdir = Path.resolve(projectdir);
-    this.builddir = Path.resolve(builddir);
+    this.projectdir = resolve(projectdir);
+    this.builddir = resolve(builddir);
     this.started = false;
     this.dockerProc = null;
     this.respawnTimer = null;
@@ -32,7 +31,7 @@ export class NinjaBot {
     this.requestsInFlight = new Map(); // keyed by rid
 
     // convert builddir to be relative to projectdir since ninja is running in projectdir
-    this.relbuilddir = Path.relative(this.projectdir, this.builddir);
+    this.relbuilddir = relative(this.projectdir, this.builddir);
     if (this.relbuilddir.startsWith('../')) {
       throw new Error(
         `builddir ${builddir} is outside projectdir ${this.projectdir}`
@@ -40,14 +39,15 @@ export class NinjaBot {
     }
   }
 
-  build(targets, clean) {
+  async build(targets, clean) {
     // Promise<didWork:bool>
-    return this.request('build', {
-      dir: '.', // ninjabot runs in projectdir
-      ninjafile: Path.join(this.relbuilddir, 'build.ninja'),
+    const r = await this.request('build', {
+      dir: '.',
+      ninjafile: join(this.relbuilddir, 'build.ninja'),
       targets,
       clean,
-    }).then(r => r.result);
+    });
+    return r.result;
   }
 
   clean() {
@@ -62,7 +62,7 @@ export class NinjaBot {
     }
   }
 
-  // request(type: string, msg :any) :Promise<any>
+  /** request(type: string, msg :any) :Promise<any> */
   request(requestType, msg) {
     let id = this.nextRequestId++;
     let req = new Promise((resolve, reject) => {
@@ -103,12 +103,15 @@ export class NinjaBot {
     }
   }
 
-  dockerSpawn(quiet) {
+  dockerSpawn(c) {
+    const quiet = c.quiet;
+    const dockerImage = c.image || defaultEmsdkDockerImage;
+
     clearTimeout(this.respawnTimer);
 
-    // make sure ninjabot program is available
+    /** make sure ninjabot program is available */
     const ninjabotProgramName = '_wasmc-ninjabot.js';
-    let ninjabotProgram = Path.join(this.builddir, ninjabotProgramName);
+    let ninjabotProgram = join(this.builddir, ninjabotProgramName);
     let st = statSync(ninjabotProgram);
     if (!st || (DEBUG && statSync(__filename).mtimeMs > st.mtimeMs)) {
       fs.writeFileSync(ninjabotProgram, ninjabotProgramCode, 'utf8');
@@ -133,14 +136,14 @@ export class NinjaBot {
       this.projectdir + ':/src',
       // "-v", Path.dirname() + ":/wasmc-tmp:ro",
 
-      emsdkDockerImage,
+      dockerImage,
       'node',
       this.relbuilddir + '/' + ninjabotProgramName,
     ];
 
     // dlog("docker", args.join(" "))
 
-    let p = (this.dockerProc = child_process.spawn('docker', args, {
+    let p = (this.dockerProc = spawn('docker', args, {
       cwd: wasmcdir,
       stdio: 'pipe',
       shell: false,

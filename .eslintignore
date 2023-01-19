@@ -4,3 +4,4 @@
 dist/
 deps/
 examples/
+wasmc.cjs

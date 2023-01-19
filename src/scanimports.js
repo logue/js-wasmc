@@ -1,22 +1,23 @@
 import { assert, dlog, repr } from './util';
-
-const Path = require('path');
+import { resolve } from 'node:path';
 
 const buf_import = Buffer.from('import', 'ascii');
 // const buf_from   = Buffer.from("from", "ascii")
 // const buf_as     = Buffer.from("as", "ascii")
 // const buf_any    = Buffer.from("any", "ascii")
 const strEscapeMap = {
-  a: '\\a',
+  // eslint-disable-next-line no-useless-escape
+  a: 'a',
   b: '\b',
   n: '\n',
   r: '\r',
   t: '\t',
 };
 
-// scanImports finds all imported paths in buf relative to dir.
-// Returns a list of strings of paths which are either absolute or symbolic.
-//
+/**
+ * scanImports finds all imported paths in buf relative to dir.
+ * Returns a list of strings of paths which are either absolute or symbolic.
+ */
 export function scanImports(buf, dir) {
   let imports = [];
   let importQueued = false;
@@ -37,7 +38,7 @@ export function scanImports(buf, dir) {
       if (buf[start] == 0x2e) {
         // '.'
         // relative import
-        path = Path.resolve(dir, path);
+        path = resolve(dir, path);
       }
       imports.push(path);
     } else if (t == 'id' && !importQueued) {
@@ -55,9 +56,10 @@ export function scanImports(buf, dir) {
   return imports;
 }
 
-// very limited JavaScript syntax scanner that only really covers what is needed
-// for import scanning
-//
+/**
+ * very limited JavaScript syntax scanner that only really covers what is needed
+ * for import scanning
+ */
 function jsscan(buf, ontok) {
   let i = 0;
   let bracelevel = 0;

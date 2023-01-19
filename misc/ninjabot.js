@@ -1,4 +1,4 @@
-const child_process = require('child_process');
+const { spawn } = require('child_process');
 
 const log = console.error.bind(console);
 const stdin = process.stdin;
@@ -15,31 +15,31 @@ function main() {
   stdin.resume();
 
   // exit when stdin is closed
-  stdin.on('end', function () {
+  stdin.on('end', () => {
     process.exit(0);
   });
 
   readJsonStream(stdin, onmsg, die);
 }
 
-function ninja_build(dir, ninjafile, targets, clean) {
-  let args = (ninjafile ? ['-f', ninjafile] : []).concat(targets);
+async function ninja_build(dir, ninjafile, targets, clean) {
+  const args = (ninjafile ? ['-f', ninjafile] : []).concat(targets);
   if (clean) {
-    return ninja_clean(dir, ninjafile).then(() => ninja_exec(dir, args));
-  } else {
-    return ninja_exec(dir, args);
+    await ninja_clean(dir, ninjafile);
+    return await ninja_exec(dir, args);
   }
+  return ninja_exec(dir, args);
 }
 
 function ninja_clean(dir, ninjafile) {
-  let args = (ninjafile ? ['-f', ninjafile] : []).concat(['-t', 'clean']);
+  const args = (ninjafile ? ['-f', ninjafile] : []).concat(['-t', 'clean']);
   return ninja_exec(dir, args);
 }
 
 function ninja_exec(dir, args) {
   // log("ninja_exec", {dir, args})
   return new Promise((resolve, reject) => {
-    let p = child_process.spawn('ninja', args, {
+    let p = spawn('ninja', args, {
       cwd: dir,
       stdio: [
         'ignore', // stdin

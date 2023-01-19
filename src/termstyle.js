@@ -1,8 +1,7 @@
-// terminal ANSI styling
-
 export const stdoutStyle = getStyle(process.stdout);
 export const stderrStyle = getStyle(process.stderr);
 
+/** terminal ANSI styling */
 export function getStyle(s) {
   let ncolors = s.isTTY && s.hasColors() ? s.getColorDepth() : 0;
   const sfn =
@@ -21,8 +20,9 @@ export function getStyle(s) {
       : () => s => s;
   return {
     ncolors,
-    reset: '\\e[0m',
-    // name               16c    256c                 close
+    // eslint-disable-next-line no-useless-escape
+    reset: 'e[0m',
+    // name 16c 256c close
     bold: sfn('1', '1', '22'),
     italic: sfn('3', '3', '23'),
     underline: sfn('4', '4', '24'),

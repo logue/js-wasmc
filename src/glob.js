@@ -1,14 +1,16 @@
-//
-// miniglob is a port of golang path/filepath
-//
-// Original Go source code Copyright (c) 2009 The Go Authors.
-// All rights reserved. See LICENSE-go for complete license.
-//
-// This code licensed under MIT, Copyright (c) 2018 Rasmus Andersson.
-// See LICENSE for complete license.
-//
-const { readdirSync, statSync } = require('fs');
-const DIRSEP = require('path').sep;
+/**
+ * miniglob is a port of golang path/filepath
+ *
+ * Original Go source code Copyright (c) 2009 The Go Authors.
+ * All rights reserved. See LICENSE-go for complete license.
+ *
+ * This code licensed under MIT, Copyright (c) 2018 Rasmus Andersson.
+ * See LICENSE for complete license.
+ */
+
+import { readdirSync, statSync } from 'node:fs';
+import { sep as DIRSEP } from 'node:path';
+
 const DIRSEP_BYTE = DIRSEP.charCodeAt(0);
 const DIRSEP_RE_PG = DIRSEP == ':' ? /:+/g : DIRSEP == '\\' ? /\\+/g : /\/+/g;
 const WIN32 = process.platform == 'win32';
@@ -619,8 +621,8 @@ function getEsc(chunk) {
 function stat(path) {
   try {
     return statSync(path);
-  } catch (_) {
-    //
+  } catch (e) {
+    console.error(e);
   }
   return null;
 }

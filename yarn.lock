@@ -60,7 +60,7 @@ __metadata:
     source-map-support: ^0.5.21
     uglify-es: ^3.3.9
   bin:
-    wasmc: wasmc
+    wasmc: ./wasmc.cjs
   languageName: unknown
   linkType: soft
 

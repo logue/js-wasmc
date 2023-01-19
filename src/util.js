@@ -1,14 +1,17 @@
-const fs = require('fs');
-const Path = require('path');
-const os = require('os');
-const inspect = require('util').inspect;
 import { glob } from './glob';
+import { inspect } from 'node:util';
+import fs from 'node:fs';
+import os from 'node:os';
+import { dirname, join } from 'node:path';
 
-// parseVersion takes a dot-separated version string with 1-4 version
-// components and returns a 32-bit integer encoding the versions in a
-// comparable format. E.g. "2.8.10.20" corresponds to 0x02080a14
-//
-// parseVersion(s :string) :int
+/**
+ * parseVersion takes a dot-separated version string with 1-4 version components
+ * and returns a 32-bit integer encoding the versions in a comparable format.
+ *
+ * @example "2.8.10.20" corresponds to 0x02080a14
+ *
+ * parseVersion(s :string) :int
+ */
 export function parseVersion(s) {
   let v = s.split('.').map(Number);
   if (v.length > 4) {
@@ -27,9 +30,10 @@ export const NODE_VERSION_11_7 = 0x000b0700; // parseVersion("11.7.0")
 export const NODE_VERSION_GTE_11_7 = NODE_VERSION >= NODE_VERSION_11_7;
 
 let _tmpdir;
+
 export function tmpdir() {
   if (!_tmpdir) {
-    _tmpdir = Path.join(os.tmpdir(), 'wasmc-' + WASMC_VERSION);
+    _tmpdir = join(os.tmpdir(), 'wasmc-' + WASMC_VERSION);
     fs.mkdir(_tmpdir, () => {});
   }
   return _tmpdir;
@@ -63,13 +67,15 @@ export const mkdir = fs.promises.mkdir;
 export const mkdirs = path => mkdir(path, { recursive: true });
 export const mkdirsSync = path => fs.mkdirSync(path, { recursive: true });
 
-export function stat(path, options) {
-  return fs.promises.stat(path, options).catch(e => {
+export async function stat(path, options) {
+  try {
+    return await fs.promises.stat(path, options);
+  } catch (e) {
     if (e.code == 'ENOENT') {
       return null;
     }
     throw e;
-  });
+  }
 }
 
 export function statSync(path) {
@@ -95,7 +101,7 @@ export async function writefile(path, data, options) {
     } catch (e) {
       if (e.code == 'ENOENT' && !triedMkdirs) {
         triedMkdirs = true;
-        await mkdirs(Path.dirname(path));
+        await mkdirs(dirname(path));
       } else {
         throw e;
       }
@@ -112,7 +118,7 @@ export function writefileSync(path, data, options) {
     } catch (e) {
       if (e.code == 'ENOENT' && !triedMkdirs) {
         triedMkdirs = true;
-        mkdirsSync(Path.dirname(path));
+        mkdirsSync(dirname(path));
       } else {
         throw e;
       }
@@ -120,15 +126,14 @@ export function writefileSync(path, data, options) {
   }
 }
 
-// monotonic high-resolution time in milliseconds
-//
 export function monotime() {
-  let v = process.hrtime();
+  const v = process.hrtime();
   return v[0] * 1000 + v[1] / 1000000;
 }
 
-// fmtduration formats a millisecond length to human-readable text
-//
+/**
+ * fmtduration formats a millisecond length to human-readable text
+ */
 export function fmtduration(ms) {
   return ms < 0.001
     ? (ms * 1000000).toFixed(0) + 'ns'
@@ -141,9 +146,9 @@ export function fmtduration(ms) {
     : ms.toFixed(2) + 'ms';
 }
 
-// globv takes an array of filesnames which can contain glob patterns
-// and expands the ones that do, returning a union of all expanded filenames.
-//
+/**
+ * globv takes an array of filesnames which can contain glob patterns and expands the ones that do, returning a union of all expanded filenames.
+ */
 export function globv(files) {
   let files2 = [];
   for (let fn of files) {
@@ -156,19 +161,23 @@ export function globv(files) {
   return files2;
 }
 
-// stripext returns path without a filename extension
-//
+/**
+ * stripext returns path without a filename extension
+ */
 export function stripext(path) {
   let di = path.lastIndexOf('.');
   let si = path.lastIndexOf('/');
   return di > si ? path.substr(0, di) : path;
 }
 
-// levenshteinDistance returns the Levenshtein "edit distance" between two strings.
-// E.g. levenshteinDistance("cat", "bar") => 2
-//
+/**
+ * levenshteinDistance returns the Levenshtein "edit distance" between two strings.
+ *
+ * @example
+ * levenshteinDistance("cat", "bar") => 2
+ */
 export function levenshteinDistance(a, b) {
-  var tmp;
+  let tmp;
   if (a.length === 0) {
     return b.length;
   }
@@ -180,7 +189,7 @@ export function levenshteinDistance(a, b) {
     a = b;
     b = tmp;
   }
-  var i,
+  let i,
     j,
     res,
     alen = a.length,

@@ -2,4 +2,6 @@
 .vscode/
 .yarn/
 dist/
-deps/
+deps/build
+examples/
+wasmc.cjs

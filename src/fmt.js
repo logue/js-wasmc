@@ -1,5 +1,5 @@
 // type Formatter = (v :any, n? :number) => any
-const inspect = require('util').inspect;
+import { inspect } from 'node:util';
 
 const formatters = {
   s: String,
@@ -17,26 +17,29 @@ const formatters = {
   X: v => Math.round(v).toString(16).toUpperCase(),
 };
 
-// fmt formats a string
-//
-// Format specifiers:
-//
-//  %s       String(value)
-//  %r       inspect(value)
-//  %Nr      inspect(value, maxdepth=N)
-//  %j       JSON.stringify(value)
-//  %jN      JSON.stringify(value, null, N)
-//  %q       JSON.stringify(String(value))
-//  %n, %f   Number(value)
-//  %fN      Number(value).toFixed(N)
-//  %i, %d   Math.round(value)
-//  %x       Math.round(value).toString(16)
-//  %X       Math.round(value).toString(16).toUpperCase()
-//  %%       "%"
-//
-// A value that is a function is called and its return value is used.
-//
-// fmt(format :string, ...args :any[]) :string
+/**
+ * fmt formats a string
+ *
+ * Format specifiers:
+ *
+ *  %s       String(value)
+ *  %r       inspect(value)
+ *  %Nr      inspect(value, maxdepth=N)
+ *  %j       JSON.stringify(value)
+ *  %jN      JSON.stringify(value, null, N)
+ *  %q       JSON.stringify(String(value))
+ *  %n, %f   Number(value)
+ *  %fN      Number(value).toFixed(N)
+ *  %i, %d   Math.round(value)
+ *  %x       Math.round(value).toString(16)
+ *  %X       Math.round(value).toString(16).toUpperCase()
+ *  %%       "%"
+ *
+ * A value that is a function is called and its return value is used.
+ *
+ * @example
+ * fmt(format :string, ...args :any[]) :string
+ */
 export function fmt(format, ...args) {
   let index = 0;
   let s = String(format).replace(

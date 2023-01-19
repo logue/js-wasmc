@@ -2,10 +2,11 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@logue/wasmc",
   "version": "2.2.3",
+  "type": "module",
   "description": "Simplifies building of WebAssembly modules from C and C++",
-  "bin": "wasmc",
+  "bin": "./wasmc.cjs",
   "files": [
-    "wasmc",
+    "wasmc.cjs",
     "wasmc.map",
     "misc/config-file.d.ts",
     "README.md",

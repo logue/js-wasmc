@@ -1,13 +1,10 @@
 import {
   assert,
   dlog,
-  stat,
   statSync,
   writefile,
-  stripext,
   monotime,
   fmtduration,
-  repr,
   mkdirsSync,
 } from './util';
 import { NinjaBot } from './ninjabot';
@@ -17,22 +14,23 @@ import { hashWasmAPI } from './scanwasm';
 import { configure } from './configure';
 import { watchfile } from './watchfile';
 
-const fs = require('fs');
-const Path = require('path');
+import fs from 'node:fs';
+import Path from 'node:path';
 
 const kSourceInfoPromise = Symbol('kSourceInfoPromise');
 
 let ninjaBotInstances = new Map(); // projectdir => NinjaBot
 
-// build compiles one or more wasmc modules
-//
-// What this function does:
-// 1. Spawns a process to scan for source files
-// 2. Runs minja to compile wasm sources
-// 3. Runs package to process and compile JS sources
-//
-// It does these things as needed, unless c.force is set.
-//
+/**
+ * build compiles one or more wasmc modules
+ *
+ * What this function does:
+ * 1. Spawns a process to scan for source files
+ * 2. Runs minja to compile wasm sources
+ * 3. Runs package to process and compile JS sources
+ *
+ * It does these things as needed, unless c.force is set.
+ */
 export async function build(c, allmodules /* = c.config.modules*/) {
   // :Promise<didBuild:bool>
   let startTime = monotime();
@@ -128,7 +126,7 @@ export async function build(c, allmodules /* = c.config.modules*/) {
   return updatedmods;
 }
 
-export async function buildIncrementally(c) {
+export function buildIncrementally(c) {
   return new Promise((_resolve, endIncrBuild) => {
     // type flags
     const T_WASM = 1,
@@ -191,8 +189,13 @@ export async function buildIncrementally(c) {
       });
     }
 
+    /**
+     * rebuildPromise joins multiple calls to rebuild
+     *
+     * @param {*} modules
+     * @param {*} isFirstBuild
+     */
     function rebuild(modules, isFirstBuild) {
-      // rebuildPromise joins multiple calls to rebuild
       if (rebuildPromise) {
         dlog(
           'enqueued rebuild',
@@ -270,7 +273,7 @@ export async function buildIncrementally(c) {
     }
 
     async function updateSources(modules, isFirstBuild) {
-      // TODO something smarter here where we keep watchers around
+      // TODO: something smarter here where we keep watchers around
       stopAllFSWatchers();
 
       let dirmap = await buildDirMap(modules);
@@ -670,9 +673,9 @@ function noop() {}
 //       continue
 //     }
 //     // TODO: find imports in JS files
-//     srcfiles.push(Path.resolve(config.projectdir, m.jsentry))
+//     srcfiles.push(resolve(config.projectdir, m.jsentry))
 //     if (m.jslib) {
-//       srcfiles.push(Path.resolve(config.projectdir, m.jslib))
+//       srcfiles.push(resolve(config.projectdir, m.jslib))
 //     }
 //   }
 //   return srcfiles

@@ -1,21 +1,16 @@
-// post-emscripten WASM packaging
-//
-// TODO: split out packaging code from CLI code (see build: builder.js + cmd_build.js)
-//
+/**
+ * post-emscripten WASM packaging
+ *
+ * TODO: split out packaging code from CLI code (see build: builder.js + cmd_build.js)
+ */
 import rollup from '../deps/build/rollup.js';
 import uglify from '../deps/build/uglify-es.js';
-import {
-  dlog,
-  assert,
-  stripext,
-  statSync,
-  NODE_VERSION_GTE_11_7,
-} from './util';
+import { stripext, NODE_VERSION_GTE_11_7 } from './util';
 import { parseopts } from './parseopts';
 import defaultJsentry from './default-jsentry';
-
-const fs = require('fs');
-const Path = require('path');
+import fs from 'node:fs';
+import Path from 'node:path';
+import { brotliCompressSync } from 'node:zlib';
 
 const options = {
   h: false,
@@ -634,6 +629,7 @@ function transformEmccAST(opts, toplevel) {
   return { ast: newTopLevel };
 }
 
+/*
 function wrapInCallClosure0(node) {
   let body = node.body;
   node.body = [
@@ -686,6 +682,7 @@ function wrapSingleExport(node, localName, exportName) {
 
   return node;
 }
+*/
 
 function getModuleEnclosure(opts) {
   let preRun = '',
@@ -870,9 +867,9 @@ export function gen_WASM_DATA(buf, target) {
     // Compress WASM data using brotli.
     // This not only yields drastically smaller files, but speeds up initialization as well.
     // disable by setting target="node-legacy" or target=null.
-    buf = require('zlib').brotliCompressSync(buf);
+    buf = brotliCompressSync(buf);
     return (
-      'require("zlib").brotliDecompressSync(Buffer.from(' +
+      'require("node:zlib").brotliDecompressSync(Buffer.from(' +
       JSON.stringify(buf.toString('base64')) +
       ',"base64"));'
     );

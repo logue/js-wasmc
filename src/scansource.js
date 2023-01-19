@@ -1,10 +1,7 @@
-import { assert, dlog, stat, statSync, repr } from './util';
+import { stat } from './util';
 import { scanImports } from './scanimports';
-
-const fs = require('fs');
-const Path = require('path');
-
-let debugSrcDir = '';
+import fs from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 
 // cb : (filename:string, st:fs.Stats, type:"js"|"wasm", parentFile?:string)=>void
 
@@ -26,11 +23,11 @@ export async function scanmod(c, m, cb) {
   }
 
   if (m.jslib) {
-    statAndCallback(Path.resolve(c.config.projectdir, m.jslib), 'js');
+    statAndCallback(resolve(c.config.projectdir, m.jslib), 'js');
   }
 
   if (m.jsentry) {
-    let jsentryfile = Path.resolve(c.config.projectdir, m.jsentry);
+    let jsentryfile = resolve(c.config.projectdir, m.jsentry);
     let resolved = new Set();
     promises.push(
       stat(jsentryfile).then(st => {
@@ -84,7 +81,7 @@ async function resolveImport(parentFilename, path, cb, resolved) {
       if (st.isFile()) {
         return { filename, st };
       } else if (ext == '' && st.isDirectory()) {
-        filename = Path.join(path, 'index');
+        filename = join(path, 'index');
       }
     }
   }
@@ -104,9 +101,7 @@ function readHead(file, st) {
         return reject(err);
       }
       let buf = readHeadBufs.pop() || Buffer.allocUnsafe(readHeadSize);
-      let finalize = () => {
-        readHeadBufs.push(buf);
-      };
+      // let finalize = () => readHeadBufs.push(buf);
       let readsize = Math.min(buf.length, st.size);
       fs.read(fd, buf, 0, readsize, null, (err, bytesRead) => {
         fs.close(fd, () => {});
@@ -116,7 +111,7 @@ function readHead(file, st) {
         }
         try {
           let buf1 = bytesRead == buf.length ? buf : buf.subarray(0, bytesRead);
-          resolve(scanImports(buf1, Path.dirname(file)));
+          resolve(scanImports(buf1, dirname(file)));
         } catch (err) {
           reject(err);
         } finally {
@@ -133,7 +128,7 @@ function readHead(file, st) {
 //   try {
 //     let bytesRead = fs.readSync(fd, buf, 0, Math.min(st.size, buf.length))
 //     let buf1 = bytesRead == buf.length ? buf : buf.subarray(0, bytesRead)
-//     return scanImports(buf1, Path.dirname(file))
+//     return scanImports(buf1, dirname(file))
 //   } finally {
 //     fs.closeSync(fd)
 //     readHeadBufs.push(buf)
@@ -160,11 +155,11 @@ function readHead(file, st) {
   }
 
   if (m.jslib) {
-    statAndCallback(Path.resolve(c.config.projectdir, m.jslib))
+    statAndCallback(resolve(c.config.projectdir, m.jslib))
   }
 
   if (m.jsentry) {
-    let jsentryfile = Path.resolve(c.config.projectdir, m.jsentry)
+    let jsentryfile = resolve(c.config.projectdir, m.jsentry)
     statAndCallback(jsentryfile)
     return scanImports(jsentryfile, st)
   }

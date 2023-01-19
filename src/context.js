@@ -1,7 +1,6 @@
 import { fmt } from './fmt';
 import { stdoutStyle, stderrStyle } from './termstyle';
-
-const Path = require('path');
+import { relative } from 'node:path';
 
 export class Context {
   constructor() {
@@ -29,14 +28,14 @@ export class Context {
   }
 
   relpath(filename) {
-    return Path.relative(this.config.projectdir, filename);
+    return relative(this.config.projectdir, filename);
   }
 
   get quiet() {
     return this._quiet;
   }
   set quiet(v) {
-    if (this._quiet === v) {
+    if ((this._quiet = v)) {
       this.log = function () {};
       this.warn = function () {};
     } else {

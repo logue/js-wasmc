@@ -1,15 +1,13 @@
-import { parseopts } from './parseopts';
-import { dlog, assert } from './util';
+import { dlog } from './util';
 import { configure } from './configure';
 import { build, buildIncrementally } from './builder';
-
-const Path = require('path');
 
 export async function cmd_build(c, opts, args) {
   c.debug = opts.debug || opts.g;
   c.watch = opts.watch || opts.w;
   c.force = opts.clean;
   c.quiet = opts.quiet || opts.q;
+  c.image = opts['docker-image'];
 
   // configure
   dlog('>> configure');

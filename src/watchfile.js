@@ -1,21 +1,22 @@
-import { assert, dlog, stat } from './util';
+import { assert, stat } from './util';
+import fs from 'node:fs';
+import { resolve } from 'node:path';
 
-const fs = require('fs');
-const Path = require('path');
-
-// watchfile(filename :string, onchange :ChangeCallback) :FSWatcher
-// type ChangeCallback = (event:"end")=>void
-//                     | (event:string, st:fs.Stats)=>void
-// interface FSWatcher {
-//   close():void    // close the watcher. does NOT call onchange("end")
-//   restart():void  // restart the watcher
-// }
-//
-// Note: When onchange receives "end" event, the callback will never be called again,
-// unless you call restart()
-//
+/**
+ *  watchfile(filename :string, onchange :ChangeCallback) :FSWatcher
+ *
+ * type ChangeCallback = (event:"end")=>void
+ *                     | (event:string, st:fs.Stats)=>void
+ * interface FSWatcher {
+ *   close():void    // close the watcher. does NOT call onchange("end")
+ *   restart():void  // restart the watcher
+ * }
+ *
+ * Note: When onchange receives "end" event, the callback will never be called again,
+ * unless you call restart()
+ */
 export function watchfile(filename, onchange) {
-  filename = Path.resolve(filename);
+  filename = resolve(filename);
 
   let lastMtime = fs.statSync(filename).mtimeMs;
   let goneTimer = null;
@@ -60,7 +61,7 @@ export function watchfile(filename, onchange) {
     }
   }
 
-  var watcher = {
+  const watcher = {
     restart() {
       if (fswatcher) {
         fswatcher.close();
